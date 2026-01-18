@@ -161,24 +161,6 @@ def load_data(config):
     possible_splits = ['train', 'val', 'test']
     dataset = None
     
-    # Try to load from saved split files
-    for split_name in possible_splits:
-        idx_file = os.path.join(data_dir, f'idx_*_{split_name}.txt')
-        if os.path.exists(idx_file):
-            # Find the latest index file
-            idx_files = glob.glob(os.path.join(data_dir, f'idx_*_{split_name}.txt'))
-            latest_idx_file = max(idx_files, key=os.path.getmtime)
-            
-            # Load indices
-            with open(latest_idx_file, 'r') as f:
-                indices = [int(line.strip()) for line in f]
-            
-            # Create dataset
-            data_set = torch.utils.data.Subset(list(data_dict.values()), range(len(data_dict)))
-            dataset = torch.utils.data.Subset(data_set, indices)
-            print(f"Loaded {split_name} split: {len(dataset)} samples")
-            break
-    
     # If no split file found, create split based on split parameter
     if dataset is None:
         print(f"\nNo saved split found, creating split...")

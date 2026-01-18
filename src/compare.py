@@ -229,45 +229,44 @@ def main():
     test_set = load_test_data(config)
     
     # Load baseline model (without attention)
-    baseline_model_path = config.get('baseline_model_path', '../ckpt/kMVN_best.torch')
-    baseline_model = load_model(config, baseline_model_path, use_attention=False)
+    model_1 = load_model(config, config['model1_path'], use_attention = "Attn" in config['model1_path'])
     
     # Generate predictions for baseline model
-    df_baseline = generate_predictions(baseline_model, test_set, config)
+    df_baseline = generate_predictions(model_1, test_set, config)
     
     # Load attention model (with attention)
-    attn_model_path = config.get('attention_model_path', '../ckpt/kMVN_Attn_best.torch')
-    attn_model = load_model(config, attn_model_path, use_attention=True)
+    model_2 = load_model(config, config['model2_path'], use_attention = "Attn" in config['model2_path'])
     
     # Generate predictions for attention model
-    df_attn = generate_predictions(attn_model, test_set, config)
+    df_attn = generate_predictions(model_2, test_set, config)
     
     # Create output directory
     out_dir = config.get('out_dir', '../out')
     os.makedirs(out_dir, exist_ok=True)
+    image_name = "comparison_" + config['model1_name'] + "_" + config['model2_name']
     
     # Generate comparison plot
     print("\nGenerating comparison plot...")
     compare_models(
         df1=df_baseline,
         df2=df_attn,
-        header=os.path.join(out_dir, 'comparison'),
+        header=os.path.join(out_dir, image_name),
         color1='#F8961E',  # Orange for baseline
         color2='#43AA8B',  # Teal for attention
-        labels=('k-MVN (baseline)', 'k-MVN + Attention'),
+        labels=(config['model1_name'], config['model2_name']),
         size=5,
         lw=3,
         r2=True  # Calculate and display R^2 scores
     )
     
-    print(f"\nComparison plot saved to: {out_dir}/comparison_model_comparison.{config['save_extension']}")
+    print(f"\nComparison plot saved to: {out_dir}/{image_name}.{config['save_extension']}")
     
     # Save comparison results to CSV
-    comparison_csv = os.path.join(out_dir, 'comparison.csv')
+    comparison_csv = os.path.join(out_dir, f"{image_name}.csv")
     with open(comparison_csv, 'w') as f:
         f.write("model,average loss,num samples\n")
-        f.write(f"k-MVN (baseline),{df_baseline['loss'].mean():.4f},{len(df_baseline)}\n")
-        f.write(f"k-MVN + Attention,{df_attn['loss'].mean():.4f},{len(df_attn)}\n")
+        f.write(f"{config['model1_name']},{df_baseline['loss'].mean():.4f},{len(df_baseline)}\n")
+        f.write(f"{config['model2_name']},{df_attn['loss'].mean():.4f},{len(df_attn)}\n")
     print(f"Comparison results saved to: {comparison_csv}")
     
     print("\n" + "=" * 60)

@@ -62,95 +62,82 @@ python sample.py --out_dir ../viz --save_extension png
 
 We evaluated the performance of k-MVN with and without attention mechanism on the phonon prediction task. The results demonstrate significant improvement when integrating Graph Transformer attention into the k-MVN architecture.
 
-### Model Comparison
+### Dropout Experiments
 
-| Model | Dataset | Average Loss | Model Size (parameters) |
-|--------|----------|---------------|-------------------------|
-| k-MVN (baseline) | Train | 0.0039 | 123,208 |
-| k-MVN (baseline) | Test | 0.0047 | 123,208 |
-| **k-MVN + Attention** | Train | **0.0031** | **139,120** |
-| **k-MVN + Attention** | Test | **0.0040** | **139,120** |
+We conducted experiments to investigate the effect of dropout regularization on the attention-enhanced model. Two configurations were tested:
 
-### Performance Analysis
+- **H4D0**: Hidden size = 4, Dropout = 0.0
+- **H4D1**: Hidden size = 4, Dropout = 0.1
 
-**Training Set Improvement:**
-- Loss reduction: 0.0039 → 0.0031 (20.5% improvement)
+#### Test Set Performance Comparison
 
-**Test Set Improvement:**
-- Loss reduction: 0.0047 → 0.0040 (14.9% improvement)
+| Model Configuration       | Test Loss  | Improvement over Baseline |
+| ------------------------- | ---------- | ------------------------- |
+| k-MVN (baseline)          | 0.0047     | -                         |
+| k-MVN + Attention + H4D0  | **0.0041** | **12.8%**                 |
+| k-MVN + Attention + H4D05 | 0.0044     | 6.4%                      |
+| k-MVN + Attention + H4D1  | 0.0045     | 4.3%                      |
 
-**Model Complexity:**
-- Parameter increase: 123,208 → 139,120 (12.9% increase)
-- Performance improvement (14.9%) exceeds parameter increase (12.9%), indicating efficient use of additional capacity
+#### Key Findings
 
-### Visualization
+1. **Best Performance with No Dropout**: The H4D0 configuration (dropout=0.0) achieves the best test loss of 0.0041, representing a **12.8% improvement** over the baseline model.
 
-The following figures compare the phonon band predictions between the baseline k-MVN model and the attention-enhanced model:
+2. **Impact of Dropout**: Adding dropout (H4D05, dropout=0.05 and H4D1, dropout=0.1) results in a test loss of 0.0044 and 0.0045, which is an about **5.5% improvement** over baseline but **7.3% worse** than H4D0. This indicates that:
+   - Dropout has a negative impact on model performance for this task
+   - The attention mechanism itself provides sufficient regularization
+   - The model benefits from utilizing all available information without dropout
 
-#### Training Set Predictions
+3. **Attention Mechanism Effectiveness**: Both attention-enhanced configurations significantly outperform the baseline (0.0047), confirming the effectiveness of the attention mechanism regardless of dropout setting.
 
-**Baseline k-MVN Model:**
-<p align="center">
-  <img src="out/kMVN_bands_train.jpg" width="600" alt="Baseline k-MVN Training Set">
-</p>
-
-**k-MVN with Attention:**
-<p align="center">
-  <img src="out/kMVN_Attn_bands_train.jpg" width="600" alt="k-MVN with Attention Training Set">
-</p>
-
-#### Test Set Predictions
-
-**Baseline k-MVN Model:**
-<p align="center">
-  <img src="out/kMVN_bands_test.jpg" width="600" alt="Baseline k-MVN Test Set">
-</p>
-
-**k-MVN with Attention:**
-<p align="center">
-  <img src="out/kMVN_Attn_bands_test.jpg" width="600" alt="k-MVN with Attention Test Set">
-</p>
-
-### Detailed Model Comparison
+#### Dropout Experiment Visualizations
 
 The following figure provides a comprehensive comparison between the baseline k-MVN model and the attention-enhanced model:
 
+**Baseline vs H4D0 Comparison:**
+
 <p align="center">
-  <img src="out/comparison_model_comparison.jpg" width="800" alt="Model Comparison">
+  <img src="out/comparison_base_H4D0.jpg" width="800" alt="Baseline vs H4D0">
 </p>
 
-**Left Panel - Correlation Scatter Plot:**
-- X-axis: True phonon frequencies (ω) from DFT calculations
-- Y-axis: Predicted phonon frequencies
-- Orange points: Baseline k-MVN predictions
-- Teal points: k-MVN + Attention predictions
-- Diagonal line: Perfect prediction reference
-- **R² scores quantify the prediction quality** for each model
+**Baseline vs H4D05 Comparison:**
 
-**Right Panel - Loss Distribution:**
-- X-axis: Loss values (logarithmic scale)
-- Y-axis: Probability density (KDE estimation)
-- Orange curve: Baseline k-MVN loss distribution
-- Teal curve: k-MVN + Attention loss distribution
-- The attention model's distribution is shifted toward lower loss values, indicating better overall performance
+<p align="center">
+  <img src="out/comparison_base_H4D05.jpg" width="800" alt="Baseline vs H4D05">
+</p>
 
-**Key Observations:**
-- The attention model shows tighter clustering around the diagonal line in the scatter plot
-- R² score improves from baseline to attention model
-- Loss distribution for attention model is shifted left (lower losses)
-- Both models show similar variance, but attention model has better central tendency
+**Baseline vs H4D1 Comparison:**
 
-### Key Findings
+<p align="center">
+  <img src="out/comparison_base_H4D1.jpg" width="800" alt="Baseline vs H4D1">
+</p>
 
-1. **Significant Performance Gain**: The attention mechanism consistently improves prediction accuracy on both training and test sets.
+**Baseline Phonon Band Predictions:**
 
-2. **Improved Generalization**: The test set improvement (14.9%) is close to the training set improvement (20.5%), indicating good generalization without severe overfitting.
+<p align="center">
+  <img src="out/kMVN_bands_train.jpg" width="450" alt="H4D0 Training Set" style="display:inline-block; margin-right: 10px;">
+  <img src="out/kMVN_bands_test.jpg" width="450" alt="H4D0 Test Set" style="display:inline-block;">
+</p>
 
-3. **Efficient Parameter Usage**: The 12.9% increase in model parameters yields a 14.9% improvement in test performance, demonstrating that the attention mechanism adds valuable modeling capability.
+**H4D0 Phonon Band Predictions:**
 
-4. **Better Long-Range Modeling**: The graph-structured attention allows nodes to capture non-local dependencies, which is particularly important for phonon properties influenced by long-range interactions.
+<p align="center">
+  <img src="out/kMVN_Attn_H4D0_bands_train.jpg" width="450" alt="H4D0 Training Set" style="display:inline-block; margin-right: 10px;">
+  <img src="out/kMVN_Attn_H4D0_bands_test.jpg" width="450" alt="H4D0 Test Set" style="display:inline-block;">
+</p>
 
-5. **Maintained Equivariance**: The attention mechanism operates only on scalar features (l=0 irreps), preserving the E(3) equivariance property of the original k-MVN architecture.
+**H4D05 Phonon Band Predictions:**
+
+<p align="center">
+  <img src="out/kMVN_Attn_H4D05_bands_train.jpg" width="450" alt="H4D05 Training Set" style="display:inline-block; margin-right: 10px;">
+  <img src="out/kMVN_Attn_H4D05_bands_test.jpg" width="450" alt="H4D05 Test Set" style="display:inline-block;">
+</p>
+
+**H4D1 Phonon Band Predictions:**
+
+<p align="center">
+  <img src="out/kMVN_Attn_H4D1_bands_train.jpg" width="450" alt="H4D1 Training Set" style="display:inline-block; margin-right: 10px;">
+  <img src="out/kMVN_Attn_H4D1_bands_test.jpg" width="450" alt="H4D1 Test Set" style="display:inline-block;">
+</p>
 
 ## Reference
 

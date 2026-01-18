@@ -23,12 +23,12 @@ input_dim: 118
 input_embed_dim: 32
 
 # Attention parameters
-use_attention: false        # 是否使用注意力机制
+use_attention: true        # 是否使用注意力机制
 attn_heads: 4              # 注意力头数
-attn_dropout: 0.1            # 注意力 dropout
+attn_dropout: 0.05            # 注意力 dropout
 
 # Training parameters
-run_name: "kMVN"
+run_name: "kMVN_Attn_H4D05"
 max_iter: 200
 lr: 0.003
 weight_decay: 0.05

@@ -257,10 +257,10 @@ class GraphNetwork_kMVN(nn.Module):
                  attn_heads=4, attn_dropout=0.1):
         super().__init__()
         self.mul = mul
-        self.irreps_in = Irreps(str(input_embed_dim) + 'x0e')
-        self.irreps_node_attr = Irreps(str(node_embed_dim) + 'x0e')
+        self.irreps_in = Irreps(str(input_embed_dim) + 'x0e') # 32个标量特征
+        self.irreps_node_attr = Irreps(str(node_embed_dim) + 'x0e') # 32个标量节点特征
         self.irreps_edge_attr = Irreps.spherical_harmonics(lmax)
-        self.irreps_hidden = Irreps([(self.mul, (l, p)) for l in range(lmax + 1) for p in [-1, 1]])
+        self.irreps_hidden = Irreps([(self.mul, (l, p)) for l in range(lmax + 1) for p in [-1, 1]]) # 维度为72
         self.irreps_out = Irreps(irreps_out)
         self.number_of_basis = number_of_basis
 
@@ -289,17 +289,17 @@ class GraphNetwork_kMVN(nn.Module):
         layers = nn.ModuleList()
         irreps_in = self.irreps_in
         for i in range(nlayers):
-            irreps_scalars = Irreps([(mul, ir) for mul, ir in self.irreps_hidden if ir.l == 0 and tp_path_exists(irreps_in, self.irreps_edge_attr, ir)])
-            irreps_gated = Irreps([(mul, ir) for mul, ir in self.irreps_hidden if ir.l > 0 and tp_path_exists(irreps_in, self.irreps_edge_attr, ir)])
+            irreps_scalars = Irreps([(mul, ir) for mul, ir in self.irreps_hidden if ir.l == 0 and tp_path_exists(irreps_in, self.irreps_edge_attr, ir)]) # 8个标量门控
+            irreps_gated = Irreps([(mul, ir) for mul, ir in self.irreps_hidden if ir.l > 0 and tp_path_exists(irreps_in, self.irreps_edge_attr, ir)]) # 对应每个门控特征一个门控值
             ir = '0e' if tp_path_exists(irreps_in, self.irreps_edge_attr, '0e') else '0o'
-            irreps_gates = Irreps([(self.mul, ir) for self.mul, _ in irreps_gated])
+            irreps_gates = Irreps([(self.mul, ir) for self.mul, _ in irreps_gated]) # 12个被门控的特征
 
             gate = Gate(irreps_scalars, [self.act[ir.p] for _, ir in irreps_scalars],
                         irreps_gates, [self.act_gates[ir.p] for _, ir in irreps_gates],
                         irreps_gated)
             conv = GraphConvolution(irreps_in, self.irreps_node_attr, self.irreps_edge_attr, gate.irreps_in, number_of_basis, radial_layers, radial_neurons)
 
-            irreps_in = gate.irreps_out
+            irreps_in = gate.irreps_out # 一共52维度
             
             # Add convolution+gate layer
             layers.append(CustomCompose(conv, gate))
@@ -323,8 +323,8 @@ class GraphNetwork_kMVN(nn.Module):
         edge_attr = edge_sh
 
         numb = data['numb']
-        x = torch.relu(self.emx(torch.relu(data['x'])))
-        z = torch.relu(self.emz(torch.relu(data['z'])))
+        x = torch.relu(self.emx(torch.relu(data['x']))) # [num_nodes, 118] -> [num_nodes, 32]
+        z = torch.relu(self.emz(torch.relu(data['z']))) # [num_nodes, 118] -> [num_nodes, 32]
         node_deg = data['node_deg']
         
         ucs = data['ucs'][0]
